@@ -1,0 +1,86 @@
+#!/bin/bash
+#
+# rc file for redirect
+#
+# chkconfig: 345 28 72
+# processname: /usr/sbin/redirect
+# config: /etc/sysconfig/redirect
+# description: Redirect all http requests to the specified address.
+
+#
+# Location of the redirect daemon
+#
+prog=redirect
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+RETVAL=0
+
+#
+# load customized configuation settings
+#
+if [ -r /etc/sysconfig/redirect ]; then
+	. /etc/sysconfig/redirect
+fi
+
+start() {
+	echo -n $"Starting $prog: "
+	/usr/sbin/redirect $OPTIONS
+	RETVAL=$?
+	if [ $RETVAL -eq 0 ] ; then
+		success "$prog startup"
+	else
+		failure "$prog startup"
+	fi
+	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/redirect
+	echo
+	return $RETVAL
+}
+
+stop() {
+	echo -n $"Stopping $prog: "
+	if [ -z "`pidof $prog`" ] ; then
+		failure "$prog shutdown"
+		echo
+		return 1
+	fi
+
+	killproc $prog -TERM >& /dev/null
+	RETVAL=$?
+	[ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/redirect
+	if [ -n "`pidof $prog`" ] ; then
+		failure "$prog shutdown"
+	else
+		success "$prog shutdown"
+	fi
+	echo
+	return $RETVAL
+}
+
+restart() {
+	stop
+	start
+}
+
+case "$1" in
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	status)
+		status $prog
+		RETVAL=$?
+		;;
+	restart)
+		restart
+		;;
+	*)
+		echo $"Usage: $0 {start|stop|status|restart}"
+		RETVAL=2;
+		;;
+esac
+
+exit $RETVAL

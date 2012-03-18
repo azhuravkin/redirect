@@ -1,0 +1,1 @@
+OPTIONS="-u nobody -p 8080 -l http://secure.nsys.by/userlock/index.html"
